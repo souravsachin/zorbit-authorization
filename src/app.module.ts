@@ -31,7 +31,7 @@ import { UserRole } from './models/entities/user-role.entity';
         username: config.get<string>('DATABASE_USER', 'zorbit'),
         password: config.get<string>('DATABASE_PASSWORD', 'zorbit_dev'),
         entities: [Role, Privilege, RolePrivilege, UserRole],
-        synchronize: false,
+        synchronize: config.get<string>('DATABASE_SYNCHRONIZE', 'false') === 'true',
         logging: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),

@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { RolesService } from '../services/roles.service';
 import { CreateRoleDto } from '../models/dto/create-role.dto';
 import { UpdateRoleDto } from '../models/dto/update-role.dto';
@@ -19,28 +20,27 @@ import { Role } from '../models/entities/role.entity';
 
 /**
  * Role management endpoints, scoped to an organization namespace.
- * All routes enforce namespace isolation via orgId.
  */
+@ApiTags('roles')
+@ApiBearerAuth()
 @Controller('api/v1/O/:orgId/roles')
 @UseGuards(JwtAuthGuard, NamespaceGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
-  /**
-   * GET /api/v1/O/:orgId/roles
-   * List all roles in an organization.
-   */
   @Get()
+  @ApiOperation({ summary: 'List roles', description: 'List all roles in an organization.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiResponse({ status: 200, description: 'List of roles returned.' })
   async findAll(@Param('orgId') orgId: string): Promise<Partial<Role>[]> {
     return this.rolesService.findAllByOrganization(orgId);
   }
 
-  /**
-   * POST /api/v1/O/:orgId/roles
-   * Create a new role in an organization.
-   */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create role', description: 'Create a new role in an organization.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiResponse({ status: 201, description: 'Role created successfully.' })
   async create(
     @Param('orgId') orgId: string,
     @Body() dto: CreateRoleDto,
@@ -48,11 +48,12 @@ export class RolesController {
     return this.rolesService.create(orgId, dto);
   }
 
-  /**
-   * GET /api/v1/O/:orgId/roles/:roleId
-   * Get a single role by hashId within an organization.
-   */
   @Get(':roleId')
+  @ApiOperation({ summary: 'Get role', description: 'Get a single role by hashId within an organization.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
+  @ApiResponse({ status: 200, description: 'Role returned.' })
+  @ApiResponse({ status: 404, description: 'Role not found.' })
   async findOne(
     @Param('orgId') orgId: string,
     @Param('roleId') roleId: string,
@@ -60,11 +61,12 @@ export class RolesController {
     return this.rolesService.findOne(orgId, roleId);
   }
 
-  /**
-   * PUT /api/v1/O/:orgId/roles/:roleId
-   * Update a role within an organization.
-   */
   @Put(':roleId')
+  @ApiOperation({ summary: 'Update role', description: 'Update a role within an organization.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
+  @ApiResponse({ status: 200, description: 'Role updated successfully.' })
+  @ApiResponse({ status: 404, description: 'Role not found.' })
   async update(
     @Param('orgId') orgId: string,
     @Param('roleId') roleId: string,
@@ -73,12 +75,13 @@ export class RolesController {
     return this.rolesService.update(orgId, roleId, dto);
   }
 
-  /**
-   * DELETE /api/v1/O/:orgId/roles/:roleId
-   * Delete a role within an organization.
-   */
   @Delete(':roleId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete role', description: 'Delete a role within an organization.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
+  @ApiResponse({ status: 204, description: 'Role deleted successfully.' })
+  @ApiResponse({ status: 404, description: 'Role not found.' })
   async remove(
     @Param('orgId') orgId: string,
     @Param('roleId') roleId: string,

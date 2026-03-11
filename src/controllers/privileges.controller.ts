@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { PrivilegesService } from '../services/privileges.service';
 import { CreatePrivilegeDto } from '../models/dto/create-privilege.dto';
 import { AssignPrivilegeDto } from '../models/dto/assign-privilege.dto';
@@ -20,47 +21,45 @@ import { Privilege } from '../models/entities/privilege.entity';
  * Privilege management endpoints.
  * Global privilege definitions and role-privilege assignment.
  */
+@ApiTags('privileges')
+@ApiBearerAuth()
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class PrivilegesController {
   constructor(private readonly privilegesService: PrivilegesService) {}
 
-  /**
-   * GET /api/v1/G/privileges
-   * List all privilege definitions.
-   */
   @Get('api/v1/G/privileges')
+  @ApiOperation({ summary: 'List privileges', description: 'List all privilege definitions.' })
+  @ApiResponse({ status: 200, description: 'List of privileges returned.' })
   async findAll(): Promise<Partial<Privilege>[]> {
     return this.privilegesService.findAll();
   }
 
-  /**
-   * POST /api/v1/G/privileges
-   * Create a new privilege definition.
-   */
   @Post('api/v1/G/privileges')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create privilege', description: 'Create a new privilege definition.' })
+  @ApiResponse({ status: 201, description: 'Privilege created successfully.' })
   async create(@Body() dto: CreatePrivilegeDto): Promise<Partial<Privilege>> {
     return this.privilegesService.create(dto);
   }
 
-  /**
-   * GET /api/v1/G/privileges/:privilegeId
-   * Get a specific privilege by hashId.
-   */
   @Get('api/v1/G/privileges/:privilegeId')
+  @ApiOperation({ summary: 'Get privilege', description: 'Get a specific privilege by hashId.' })
+  @ApiParam({ name: 'privilegeId', description: 'Privilege short hash ID', example: 'PRV-81F3' })
+  @ApiResponse({ status: 200, description: 'Privilege returned.' })
+  @ApiResponse({ status: 404, description: 'Privilege not found.' })
   async findOne(
     @Param('privilegeId') privilegeId: string,
   ): Promise<Partial<Privilege>> {
     return this.privilegesService.findOne(privilegeId);
   }
 
-  /**
-   * GET /api/v1/O/:orgId/roles/:roleId/privileges
-   * List privileges assigned to a role.
-   */
   @Get('api/v1/O/:orgId/roles/:roleId/privileges')
   @UseGuards(NamespaceGuard)
+  @ApiOperation({ summary: 'List role privileges', description: 'List privileges assigned to a role.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
+  @ApiResponse({ status: 200, description: 'List of privileges returned.' })
   async findByRole(
     @Param('orgId') orgId: string,
     @Param('roleId') roleId: string,
@@ -68,13 +67,13 @@ export class PrivilegesController {
     return this.privilegesService.findByRole(orgId, roleId);
   }
 
-  /**
-   * POST /api/v1/O/:orgId/roles/:roleId/privileges
-   * Assign a privilege to a role.
-   */
   @Post('api/v1/O/:orgId/roles/:roleId/privileges')
   @UseGuards(NamespaceGuard)
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Assign privilege to role', description: 'Assign a privilege to a role.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
+  @ApiResponse({ status: 201, description: 'Privilege assigned successfully.' })
   async assignToRole(
     @Param('orgId') orgId: string,
     @Param('roleId') roleId: string,
@@ -83,13 +82,14 @@ export class PrivilegesController {
     return this.privilegesService.assignToRole(orgId, roleId, dto.privilegeHashId);
   }
 
-  /**
-   * DELETE /api/v1/O/:orgId/roles/:roleId/privileges/:privilegeId
-   * Revoke a privilege from a role.
-   */
   @Delete('api/v1/O/:orgId/roles/:roleId/privileges/:privilegeId')
   @UseGuards(NamespaceGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Revoke privilege from role', description: 'Revoke a privilege from a role.' })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
+  @ApiParam({ name: 'privilegeId', description: 'Privilege short hash ID', example: 'PRV-81F3' })
+  @ApiResponse({ status: 204, description: 'Privilege revoked successfully.' })
   async revokeFromRole(
     @Param('orgId') orgId: string,
     @Param('roleId') roleId: string,

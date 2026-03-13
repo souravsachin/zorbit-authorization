@@ -1,20 +1,24 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NamespaceScope } from '../entities/privilege.entity';
 
 export class CreatePrivilegeDto {
-  @ApiProperty({ description: 'Privilege code', example: 'users.read' })
+  @ApiProperty({ description: 'Privilege name', example: 'Manage Users' })
   @IsString()
   @IsNotEmpty()
-  code!: string;
+  name!: string;
 
-  @ApiPropertyOptional({ description: 'Privilege description', example: 'Read access to user resources' })
+  @ApiPropertyOptional({ description: 'Privilege description', example: 'Allows managing user accounts' })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Namespace scope for this privilege', enum: ['G', 'O', 'D', 'U'] })
-  @IsEnum(NamespaceScope)
-  @IsOptional()
-  namespaceScope?: NamespaceScope;
+  @ApiProperty({ description: 'Resource this privilege controls', example: 'users' })
+  @IsString()
+  @IsNotEmpty()
+  resource!: string;
+
+  @ApiProperty({ description: 'Action allowed on the resource', example: 'write', enum: ['read', 'write', 'delete', 'admin'] })
+  @IsString()
+  @IsIn(['read', 'write', 'delete', 'admin'])
+  action!: string;
 }

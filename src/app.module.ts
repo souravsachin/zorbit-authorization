@@ -8,11 +8,17 @@ import { PrivilegesModule } from './modules/privileges.module';
 import { UserRolesModule } from './modules/user-roles.module';
 import { PolicyModule } from './modules/policy.module';
 import { EventsModule } from './modules/events.module';
+import { PrivilegeSectionsModule } from './modules/privilege-sections.module';
+import { PrivilegesV2Module } from './modules/privileges-v2.module';
 import { JwtStrategy } from './middleware/jwt.strategy';
+import { HealthController } from './controllers/health.controller';
 import { Role } from './models/entities/role.entity';
 import { Privilege } from './models/entities/privilege.entity';
 import { RolePrivilege } from './models/entities/role-privilege.entity';
 import { UserRole } from './models/entities/user-role.entity';
+import { PrivilegeSection } from './models/entities/privilege-section.entity';
+import { PrivilegeV2 } from './models/entities/privilege-v2.entity';
+import { RolePrivilegeV2 } from './models/entities/role-privilege-v2.entity';
 
 @Module({
   imports: [
@@ -30,7 +36,7 @@ import { UserRole } from './models/entities/user-role.entity';
         database: config.get<string>('DATABASE_NAME', 'zorbit_authorization'),
         username: config.get<string>('DATABASE_USER', 'zorbit'),
         password: config.get<string>('DATABASE_PASSWORD', 'zorbit_dev'),
-        entities: [Role, Privilege, RolePrivilege, UserRole],
+        entities: [Role, Privilege, RolePrivilege, UserRole, PrivilegeSection, PrivilegeV2, RolePrivilegeV2],
         synchronize: config.get<string>('DATABASE_SYNCHRONIZE', 'false') === 'true',
         logging: config.get<string>('NODE_ENV') !== 'production',
       }),
@@ -48,7 +54,10 @@ import { UserRole } from './models/entities/user-role.entity';
     UserRolesModule,
     PolicyModule,
     EventsModule,
+    PrivilegeSectionsModule,
+    PrivilegesV2Module,
   ],
+  controllers: [HealthController],
   providers: [JwtStrategy],
 })
 export class AppModule {}

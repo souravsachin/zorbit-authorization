@@ -74,6 +74,8 @@ npm run migration:run
 npm run start:dev
 ```
 
+Service runs on port 3002 (default). Production/server: port 3102.
+
 ## Events Published
 
 - authorization.role.created

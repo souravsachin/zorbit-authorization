@@ -5,11 +5,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Privilege } from '../models/entities/privilege.entity';
 import { RolePrivilege } from '../models/entities/role-privilege.entity';
 import { Role } from '../models/entities/role.entity';
 import { CreatePrivilegeDto } from '../models/dto/create-privilege.dto';
+import { UpdatePrivilegeDto } from '../models/dto/update-privilege.dto';
 import { HashIdService } from './hash-id.service';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { AuthorizationEvents } from '../events/authorization.events';
@@ -30,85 +31,176 @@ export class PrivilegesService {
   ) {}
 
   /**
-   * List all privileges registered in the platform.
+   * List all privileges within an organization.
    */
-  async findAll(): Promise<Partial<Privilege>[]> {
+  async findAllByOrganization(orgId: string): Promise<Partial<Privilege>[]> {
     const privileges = await this.privilegeRepository.find({
-      order: { code: 'ASC' },
+      where: { organizationHashId: orgId },
+      order: { createdAt: 'DESC' },
     });
 
     return privileges.map((p) => ({
       hashId: p.hashId,
-      code: p.code,
+      name: p.name,
       description: p.description,
-      namespaceScope: p.namespaceScope,
+      resource: p.resource,
+      action: p.action,
+      organizationHashId: p.organizationHashId,
       createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
     }));
   }
 
   /**
-   * Find a privilege by hashId.
+   * Find a privilege by hashId, scoped to an organization.
    */
-  async findOne(privilegeHashId: string): Promise<Partial<Privilege>> {
+  async findOne(orgId: string, privilegeHashId: string): Promise<Partial<Privilege>> {
     const privilege = await this.privilegeRepository.findOne({
-      where: { hashId: privilegeHashId },
+      where: { hashId: privilegeHashId, organizationHashId: orgId },
     });
 
     if (!privilege) {
-      throw new NotFoundException(`Privilege ${privilegeHashId} not found`);
+      throw new NotFoundException(`Privilege ${privilegeHashId} not found in organization ${orgId}`);
     }
 
     return {
       hashId: privilege.hashId,
-      code: privilege.code,
+      name: privilege.name,
       description: privilege.description,
-      namespaceScope: privilege.namespaceScope,
+      resource: privilege.resource,
+      action: privilege.action,
+      organizationHashId: privilege.organizationHashId,
       createdAt: privilege.createdAt,
+      updatedAt: privilege.updatedAt,
     };
   }
 
   /**
-   * Create a new privilege definition.
+   * Create a new privilege within an organization.
    */
-  async create(dto: CreatePrivilegeDto): Promise<Partial<Privilege>> {
+  async create(orgId: string, dto: CreatePrivilegeDto): Promise<Partial<Privilege>> {
     const existing = await this.privilegeRepository.findOne({
-      where: { code: dto.code },
+      where: { name: dto.name, organizationHashId: orgId },
     });
     if (existing) {
-      throw new ConflictException(`Privilege with code '${dto.code}' already exists`);
+      throw new ConflictException(`Privilege with name '${dto.name}' already exists in organization ${orgId}`);
     }
 
     const hashId = this.hashIdService.generate('PRV');
 
     const privilege = this.privilegeRepository.create({
       hashId,
-      code: dto.code,
+      name: dto.name,
       description: dto.description || null,
-      namespaceScope: dto.namespaceScope,
+      resource: dto.resource,
+      action: dto.action,
+      organizationHashId: orgId,
     });
 
     await this.privilegeRepository.save(privilege);
 
-    this.logger.log(`Created privilege ${privilege.hashId} (${privilege.code})`);
+    await this.eventPublisher.publish(
+      AuthorizationEvents.PRIVILEGE_CREATED,
+      'O',
+      orgId,
+      {
+        privilegeHashId: privilege.hashId,
+        name: privilege.name,
+        resource: privilege.resource,
+        action: privilege.action,
+        organizationHashId: orgId,
+      },
+    );
+
+    this.logger.log(`Created privilege ${privilege.hashId} (${privilege.name}) in org ${orgId}`);
 
     return {
       hashId: privilege.hashId,
-      code: privilege.code,
+      name: privilege.name,
       description: privilege.description,
-      namespaceScope: privilege.namespaceScope,
+      resource: privilege.resource,
+      action: privilege.action,
+      organizationHashId: privilege.organizationHashId,
       createdAt: privilege.createdAt,
     };
   }
 
   /**
-   * Assign a privilege to a role within an organization.
+   * Update an existing privilege within an organization.
+   */
+  async update(orgId: string, privilegeHashId: string, dto: UpdatePrivilegeDto): Promise<Partial<Privilege>> {
+    const privilege = await this.privilegeRepository.findOne({
+      where: { hashId: privilegeHashId, organizationHashId: orgId },
+    });
+
+    if (!privilege) {
+      throw new NotFoundException(`Privilege ${privilegeHashId} not found in organization ${orgId}`);
+    }
+
+    if (dto.name !== undefined) privilege.name = dto.name;
+    if (dto.description !== undefined) privilege.description = dto.description;
+    if (dto.resource !== undefined) privilege.resource = dto.resource;
+    if (dto.action !== undefined) privilege.action = dto.action;
+
+    await this.privilegeRepository.save(privilege);
+
+    await this.eventPublisher.publish(
+      AuthorizationEvents.PRIVILEGE_UPDATED,
+      'O',
+      orgId,
+      {
+        privilegeHashId: privilege.hashId,
+        updatedFields: Object.keys(dto).filter(
+          (k) => dto[k as keyof UpdatePrivilegeDto] !== undefined,
+        ),
+      },
+    );
+
+    this.logger.log(`Updated privilege ${privilegeHashId} in org ${orgId}`);
+
+    return {
+      hashId: privilege.hashId,
+      name: privilege.name,
+      description: privilege.description,
+      resource: privilege.resource,
+      action: privilege.action,
+      organizationHashId: privilege.organizationHashId,
+      updatedAt: privilege.updatedAt,
+    };
+  }
+
+  /**
+   * Soft-delete a privilege within an organization.
+   */
+  async remove(orgId: string, privilegeHashId: string): Promise<void> {
+    const privilege = await this.privilegeRepository.findOne({
+      where: { hashId: privilegeHashId, organizationHashId: orgId },
+    });
+
+    if (!privilege) {
+      throw new NotFoundException(`Privilege ${privilegeHashId} not found in organization ${orgId}`);
+    }
+
+    await this.privilegeRepository.softRemove(privilege);
+
+    await this.eventPublisher.publish(
+      AuthorizationEvents.PRIVILEGE_DELETED,
+      'O',
+      orgId,
+      { privilegeHashId },
+    );
+
+    this.logger.log(`Soft-deleted privilege ${privilegeHashId} from org ${orgId}`);
+  }
+
+  /**
+   * Assign multiple privileges to a role within an organization.
    */
   async assignToRole(
     orgId: string,
     roleHashId: string,
-    privilegeHashId: string,
-  ): Promise<{ roleHashId: string; privilegeHashId: string; assignedAt: Date }> {
-    // Verify role exists and belongs to org
+    privilegeHashIds: string[],
+  ): Promise<{ roleHashId: string; privilegeHashIds: string[]; assignedAt: Date }[]> {
     const role = await this.roleRepository.findOne({
       where: { hashId: roleHashId, organizationHashId: orgId },
     });
@@ -116,30 +208,39 @@ export class PrivilegesService {
       throw new NotFoundException(`Role ${roleHashId} not found in organization ${orgId}`);
     }
 
-    // Verify privilege exists
-    const privilege = await this.privilegeRepository.findOne({
-      where: { hashId: privilegeHashId },
+    const privileges = await this.privilegeRepository.find({
+      where: { hashId: In(privilegeHashIds), organizationHashId: orgId },
     });
-    if (!privilege) {
-      throw new NotFoundException(`Privilege ${privilegeHashId} not found`);
+
+    const foundHashIds = privileges.map((p) => p.hashId);
+    const missing = privilegeHashIds.filter((id) => !foundHashIds.includes(id));
+    if (missing.length > 0) {
+      throw new NotFoundException(`Privileges not found in organization ${orgId}: ${missing.join(', ')}`);
     }
 
-    // Check for duplicate assignment
-    const existing = await this.rolePrivilegeRepository.findOne({
-      where: { roleId: role.id, privilegeId: privilege.id },
-    });
-    if (existing) {
-      throw new ConflictException(
-        `Privilege ${privilegeHashId} already assigned to role ${roleHashId}`,
-      );
+    const results: { roleHashId: string; privilegeHashIds: string[]; assignedAt: Date }[] = [];
+
+    for (const privilege of privileges) {
+      const existing = await this.rolePrivilegeRepository.findOne({
+        where: { roleId: role.id, privilegeId: privilege.id },
+      });
+      if (existing) {
+        continue; // Skip already assigned
+      }
+
+      const rolePrivilege = this.rolePrivilegeRepository.create({
+        roleId: role.id,
+        privilegeId: privilege.id,
+      });
+
+      await this.rolePrivilegeRepository.save(rolePrivilege);
+
+      results.push({
+        roleHashId,
+        privilegeHashIds: [privilege.hashId],
+        assignedAt: rolePrivilege.assignedAt,
+      });
     }
-
-    const rolePrivilege = this.rolePrivilegeRepository.create({
-      roleId: role.id,
-      privilegeId: privilege.id,
-    });
-
-    await this.rolePrivilegeRepository.save(rolePrivilege);
 
     await this.eventPublisher.publish(
       AuthorizationEvents.PRIVILEGE_ASSIGNED,
@@ -147,18 +248,13 @@ export class PrivilegesService {
       orgId,
       {
         roleHashId,
-        privilegeHashId,
-        privilegeCode: privilege.code,
+        privilegeHashIds: foundHashIds,
       },
     );
 
-    this.logger.log(`Assigned privilege ${privilegeHashId} to role ${roleHashId} in org ${orgId}`);
+    this.logger.log(`Assigned ${results.length} privileges to role ${roleHashId} in org ${orgId}`);
 
-    return {
-      roleHashId,
-      privilegeHashId,
-      assignedAt: rolePrivilege.assignedAt,
-    };
+    return results;
   }
 
   /**
@@ -169,7 +265,6 @@ export class PrivilegesService {
     roleHashId: string,
     privilegeHashId: string,
   ): Promise<void> {
-    // Verify role exists and belongs to org
     const role = await this.roleRepository.findOne({
       where: { hashId: roleHashId, organizationHashId: orgId },
     });
@@ -177,12 +272,11 @@ export class PrivilegesService {
       throw new NotFoundException(`Role ${roleHashId} not found in organization ${orgId}`);
     }
 
-    // Verify privilege exists
     const privilege = await this.privilegeRepository.findOne({
-      where: { hashId: privilegeHashId },
+      where: { hashId: privilegeHashId, organizationHashId: orgId },
     });
     if (!privilege) {
-      throw new NotFoundException(`Privilege ${privilegeHashId} not found`);
+      throw new NotFoundException(`Privilege ${privilegeHashId} not found in organization ${orgId}`);
     }
 
     const rolePrivilege = await this.rolePrivilegeRepository.findOne({
@@ -203,7 +297,6 @@ export class PrivilegesService {
       {
         roleHashId,
         privilegeHashId,
-        privilegeCode: privilege.code,
       },
     );
 
@@ -228,9 +321,11 @@ export class PrivilegesService {
 
     return rolePrivileges.map((rp) => ({
       hashId: rp.privilege.hashId,
-      code: rp.privilege.code,
+      name: rp.privilege.name,
       description: rp.privilege.description,
-      namespaceScope: rp.privilege.namespaceScope,
+      resource: rp.privilege.resource,
+      action: rp.privilege.action,
+      organizationHashId: rp.privilege.organizationHashId,
       createdAt: rp.privilege.createdAt,
     }));
   }

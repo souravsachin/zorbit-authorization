@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Role } from '../models/entities/role.entity';
 import { RolePrivilege } from '../models/entities/role-privilege.entity';
-import { Privilege, NamespaceScope } from '../models/entities/privilege.entity';
+import { Privilege } from '../models/entities/privilege.entity';
 import { UserRole } from '../models/entities/user-role.entity';
 import {
   AuthorizeRequestDto,
@@ -20,8 +20,7 @@ import { AuthorizationEvents } from '../events/authorization.events';
  * The evaluation flow:
  * 1. Look up user's roles in the given namespace (organization)
  * 2. Collect all privileges from those roles
- * 3. Check if the requested action matches any privilege code
- * 4. Verify the privilege's namespace scope encompasses the request namespace
+ * 3. Check if the requested action+resource matches any privilege
  */
 @Injectable()
 export class PolicyService {
@@ -79,20 +78,18 @@ export class PolicyService {
         return this.buildResponse(request, false, 'No privileges assigned to user roles');
       }
 
-      // 4. Check if any privilege matches the requested action
+      // 4. Check if any privilege matches the requested resource + action
       const matchingPrivilege = rolePrivileges.find((rp) => {
         const privilege = rp.privilege;
-        // Match privilege code against the requested action
-        // Support wildcard: 'users.*' matches 'users.read', 'users.write', etc.
-        return this.matchesAction(privilege.code, request.action) &&
-          this.matchesNamespaceScope(privilege.namespaceScope, request.namespace);
+        return this.matchesResourceAction(privilege, request.resource, request.action);
       });
 
       if (matchingPrivilege) {
+        const privilege = matchingPrivilege.privilege;
         const response = this.buildResponse(
           request,
           true,
-          `Granted by privilege: ${matchingPrivilege.privilege.code}`,
+          `Granted by privilege: ${privilege.name} (${privilege.resource}.${privilege.action})`,
         );
         await this.publishEvaluation(request, response, Date.now() - startTime);
         return response;
@@ -112,46 +109,18 @@ export class PolicyService {
   }
 
   /**
-   * Check if a privilege code matches the requested action.
-   * Supports exact match and wildcard patterns:
-   *   - 'users.read' matches 'users.read' (exact)
-   *   - 'users.*' matches 'users.read', 'users.write' (wildcard)
-   *   - '*' matches everything (superadmin)
+   * Check if a privilege matches the requested resource and action.
+   * - 'admin' action on matching resource grants all actions
+   * - Exact resource + action match
    */
-  private matchesAction(privilegeCode: string, action: string): boolean {
-    if (privilegeCode === '*') return true;
-    if (privilegeCode === action) return true;
-
-    // Wildcard matching: 'users.*' matches 'users.read'
-    if (privilegeCode.endsWith('.*')) {
-      const prefix = privilegeCode.slice(0, -2);
-      return action.startsWith(prefix + '.');
-    }
-
-    return false;
-  }
-
-  /**
-   * Check if the privilege's namespace scope encompasses the request namespace.
-   * Scope hierarchy: G > O > D > U
-   * A Global-scoped privilege grants access at all namespace levels.
-   */
-  private matchesNamespaceScope(
-    privilegeScope: NamespaceScope,
-    requestNamespace: string,
+  private matchesResourceAction(
+    privilege: Privilege,
+    resource: string,
+    action: string,
   ): boolean {
-    const scopeHierarchy: Record<string, number> = {
-      [NamespaceScope.GLOBAL]: 4,
-      [NamespaceScope.ORGANIZATION]: 3,
-      [NamespaceScope.DEPARTMENT]: 2,
-      [NamespaceScope.USER]: 1,
-    };
-
-    const privilegeLevel = scopeHierarchy[privilegeScope] ?? 0;
-    const requestLevel = scopeHierarchy[requestNamespace] ?? 0;
-
-    // Privilege scope must be >= request namespace level
-    return privilegeLevel >= requestLevel;
+    if (privilege.resource !== resource) return false;
+    if (privilege.action === 'admin') return true;
+    return privilege.action === action;
   }
 
   private buildResponse(

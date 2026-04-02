@@ -1,0 +1,140 @@
+{
+  "moduleId": "authorization",
+  "moduleName": "Authorization",
+  "moduleType": "platform-service",
+  "version": "1.0.0",
+  "description": "Role-based access control (RBAC) with privilege management, role-privilege assignment, user-role assignment, and namespace-scoped policy enforcement.",
+  "owner": "OneZippy.ai",
+  "icon": "security",
+  "color": "#dc2626",
+
+  "navigation": {
+    "sections": [
+      {
+        "label": "Authorization",
+        "icon": "security",
+        "sortOrder": 3,
+        "privilege": "authorization.view",
+        "items": [
+          {
+            "label": "Roles",
+            "feRoute": "/org/{{org_id}}/roles",
+            "beRoute": "/api/v1/O/{{org_id}}/roles",
+            "privilege": "authorization.roles.read",
+            "sortOrder": 1,
+            "icon": "admin_panel_settings"
+          },
+          {
+            "label": "Privileges",
+            "feRoute": "/org/{{org_id}}/privileges",
+            "beRoute": "/api/v1/G/privileges",
+            "privilege": "authorization.privileges.read",
+            "sortOrder": 2,
+            "icon": "verified_user"
+          }
+        ]
+      }
+    ]
+  },
+
+  "frontend": {
+    "bundleUrl": "/modules/authorization/bundle.js",
+    "loadStrategy": "eager",
+    "entryComponent": "AuthorizationApp",
+    "routes": [
+      "/org/*/roles/*",
+      "/org/*/privileges/*"
+    ]
+  },
+
+  "backend": {
+    "baseUrl": "http://localhost:3102",
+    "healthEndpoint": "/api/v1/G/authorization/health",
+    "apiPrefix": "/api/v1",
+    "endpoints": [
+      { "method": "GET", "path": "/O/{orgId}/roles", "privilege": "authorization.roles.read" },
+      { "method": "POST", "path": "/O/{orgId}/roles", "privilege": "authorization.roles.create" },
+      { "method": "GET", "path": "/O/{orgId}/roles/:roleId", "privilege": "authorization.roles.read" },
+      { "method": "PUT", "path": "/O/{orgId}/roles/:roleId", "privilege": "authorization.roles.update" },
+      { "method": "DELETE", "path": "/O/{orgId}/roles/:roleId", "privilege": "authorization.roles.delete" },
+      { "method": "GET", "path": "/G/privileges", "privilege": "authorization.privileges.read" },
+      { "method": "POST", "path": "/G/privileges", "privilege": "authorization.privileges.create" },
+      { "method": "GET", "path": "/O/{orgId}/roles/:roleId/privileges", "privilege": "authorization.roles.read" },
+      { "method": "POST", "path": "/O/{orgId}/roles/:roleId/privileges", "privilege": "authorization.roles.update" },
+      { "method": "GET", "path": "/O/{orgId}/users/:userId/roles", "privilege": "authorization.user_roles.read" },
+      { "method": "POST", "path": "/O/{orgId}/users/:userId/roles", "privilege": "authorization.user_roles.assign" },
+      { "method": "POST", "path": "/O/{orgId}/policy/evaluate", "privilege": null, "description": "Evaluate authorization policy" }
+    ]
+  },
+
+  "dashboard": {
+    "widgets": [
+      {
+        "widgetId": "authz-total-roles",
+        "type": "kpi",
+        "tier": 2,
+        "label": "Total Roles",
+        "dataEndpoint": "/api/v1/O/{orgId}/roles/count",
+        "refreshIntervalSeconds": 300,
+        "privilege": "authorization.dashboard.view"
+      }
+    ]
+  },
+
+  "seeding": {
+    "seedEndpoint": "/api/v1/G/authorization/seed",
+    "flushEndpoint": "/api/v1/G/authorization/flush",
+    "profiles": {
+      "system-minimum": { "description": "Admin, member, viewer roles with core privileges", "records": 3 }
+    },
+    "dependencies": ["zorbit-identity"]
+  },
+
+  "events": {
+    "publishes": [
+      "authorization.role.created",
+      "authorization.role.updated",
+      "authorization.role.deleted",
+      "authorization.privilege.created",
+      "authorization.privilege.assigned",
+      "authorization.user_role.assigned",
+      "authorization.user_role.revoked"
+    ],
+    "subscribes": [
+      "identity.user.created"
+    ]
+  },
+
+  "database": {
+    "type": "postgresql",
+    "name": "zorbit_authorization",
+    "collections": [
+      "roles",
+      "privileges",
+      "role_privileges",
+      "user_roles",
+      "privilege_sections"
+    ]
+  },
+
+  "dependencies": {
+    "platform": [
+      "zorbit-identity",
+      "zorbit-event_bus"
+    ],
+    "business": []
+  },
+
+  "pii": {
+    "autoDetect": false,
+    "declaredFields": []
+  },
+
+  "analytics": {
+    "grafanaDashboard": "authorization-ops",
+    "metrics": [
+      { "name": "authz_policy_evaluations_total", "type": "counter", "labels": ["result", "org"] },
+      { "name": "authz_policy_evaluation_duration_ms", "type": "histogram" }
+    ]
+  }
+}

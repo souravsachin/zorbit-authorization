@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PrivilegeSection } from '../models/entities/privilege-section.entity';
+import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 import { CreatePrivilegeSectionDto } from '../models/dto/create-privilege-section.dto';
 import { UpdatePrivilegeSectionDto } from '../models/dto/update-privilege-section.dto';
 import { EventPublisherService } from '../events/event-publisher.service';
@@ -19,6 +20,8 @@ export class PrivilegeSectionsService {
   constructor(
     @InjectRepository(PrivilegeSection)
     private readonly sectionRepository: Repository<PrivilegeSection>,
+    @InjectRepository(PrivilegeV2)
+    private readonly privilegeV2Repository: Repository<PrivilegeV2>,
     private readonly eventPublisher: EventPublisherService,
   ) {}
 
@@ -152,5 +155,66 @@ export class PrivilegeSectionsService {
     );
 
     this.logger.log(`Deleted privilege section ${id}`);
+  }
+
+  /**
+   * Assign privileges to a section (update their sectionId).
+   */
+  async assignPrivileges(
+    sectionId: string,
+    privilegeIds: string[],
+  ): Promise<{ sectionId: string; assigned: string[]; notFound: string[] }> {
+    const section = await this.sectionRepository.findOne({ where: { id: sectionId } });
+    if (!section) {
+      throw new NotFoundException(`Privilege section ${sectionId} not found`);
+    }
+
+    const assigned: string[] = [];
+    const notFound: string[] = [];
+
+    for (const privId of privilegeIds) {
+      const privilege = await this.privilegeV2Repository.findOne({ where: { id: privId } });
+      if (!privilege) {
+        notFound.push(privId);
+        continue;
+      }
+      privilege.sectionId = sectionId;
+      await this.privilegeV2Repository.save(privilege);
+      assigned.push(privId);
+    }
+
+    if (assigned.length > 0) {
+      await this.eventPublisher.publish(
+        AuthorizationEvents.PRIVILEGE_SECTION_UPDATED,
+        'G',
+        'G',
+        {
+          sectionId,
+          sectionCode: section.sectionCode,
+          assignedPrivileges: assigned,
+        },
+      );
+    }
+
+    this.logger.log(
+      `Assigned ${assigned.length} privileges to section ${sectionId} (${notFound.length} not found)`,
+    );
+
+    return { sectionId, assigned, notFound };
+  }
+
+  /**
+   * List privileges belonging to a section.
+   */
+  async findPrivilegesBySection(sectionId: string): Promise<PrivilegeV2[]> {
+    const section = await this.sectionRepository.findOne({ where: { id: sectionId } });
+    if (!section) {
+      throw new NotFoundException(`Privilege section ${sectionId} not found`);
+    }
+
+    return this.privilegeV2Repository.find({
+      where: { sectionId },
+      order: { seqNumber: 'ASC' },
+    });
   }
 }

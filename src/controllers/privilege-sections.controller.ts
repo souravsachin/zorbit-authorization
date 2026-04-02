@@ -14,8 +14,10 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@ne
 import { PrivilegeSectionsService } from '../services/privilege-sections.service';
 import { CreatePrivilegeSectionDto } from '../models/dto/create-privilege-section.dto';
 import { UpdatePrivilegeSectionDto } from '../models/dto/update-privilege-section.dto';
+import { AssignSectionPrivilegesDto } from '../models/dto/assign-section-privileges.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
 import { PrivilegeSection } from '../models/entities/privilege-section.entity';
+import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 
 /**
  * Privilege section CRUD endpoints (Global namespace).
@@ -77,5 +79,27 @@ export class PrivilegeSectionsController {
   @ApiResponse({ status: 404, description: 'Section not found.' })
   async remove(@Param('id') id: string): Promise<void> {
     return this.sectionsService.remove(id);
+  }
+
+  @Post(':id/privileges')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Assign privileges to section', description: 'Assign one or more privileges to a section by updating their sectionId.' })
+  @ApiParam({ name: 'id', description: 'Section ID', example: 'SEC-A1B2' })
+  @ApiResponse({ status: 200, description: 'Privileges assigned to section.' })
+  @ApiResponse({ status: 404, description: 'Section not found.' })
+  async assignPrivileges(
+    @Param('id') id: string,
+    @Body() dto: AssignSectionPrivilegesDto,
+  ) {
+    return this.sectionsService.assignPrivileges(id, dto.privilegeIds);
+  }
+
+  @Get(':id/privileges')
+  @ApiOperation({ summary: 'List privileges in section', description: 'List all privileges belonging to a section.' })
+  @ApiParam({ name: 'id', description: 'Section ID', example: 'SEC-A1B2' })
+  @ApiResponse({ status: 200, description: 'List of privileges in section.' })
+  @ApiResponse({ status: 404, description: 'Section not found.' })
+  async findPrivileges(@Param('id') id: string): Promise<PrivilegeV2[]> {
+    return this.sectionsService.findPrivilegesBySection(id);
   }
 }

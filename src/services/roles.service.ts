@@ -74,7 +74,18 @@ export class RolesService {
   /**
    * Create a new role within an organization.
    */
+  // Reserved role names — prevent privilege escalation via role naming
+  private static readonly RESERVED_ROLE_NAMES = [
+    'superadmin', 'super', 'sysadmin', 'system', 'root', 'platform-admin',
+  ];
+
   async create(orgId: string, dto: CreateRoleDto): Promise<Partial<Role>> {
+    // Block reserved role names
+    const normalizedName = (dto.name || '').toLowerCase().trim();
+    if (RolesService.RESERVED_ROLE_NAMES.includes(normalizedName)) {
+      throw new ConflictException(`Role name '${dto.name}' is reserved and cannot be created`);
+    }
+
     // Check for duplicate name within the org
     const existing = await this.roleRepository.findOne({
       where: { name: dto.name, organizationHashId: orgId },
@@ -136,7 +147,14 @@ export class RolesService {
       throw new ForbiddenException(`System role ${roleHashId} cannot be modified`);
     }
 
-    if (dto.name !== undefined) role.name = dto.name;
+    // Block renaming to reserved role names
+    if (dto.name !== undefined) {
+      const normalizedName = dto.name.toLowerCase().trim();
+      if (RolesService.RESERVED_ROLE_NAMES.includes(normalizedName)) {
+        throw new ConflictException(`Role name '${dto.name}' is reserved`);
+      }
+      role.name = dto.name;
+    }
     if (dto.description !== undefined) role.description = dto.description;
     if (dto.status !== undefined) role.status = dto.status;
 

@@ -10,6 +10,7 @@ import { PolicyModule } from './modules/policy.module';
 import { EventsModule } from './modules/events.module';
 import { PrivilegeSectionsModule } from './modules/privilege-sections.module';
 import { PrivilegesV2Module } from './modules/privileges-v2.module';
+import { SeedModule } from './modules/seed.module';
 import { JwtStrategy } from './middleware/jwt.strategy';
 import { HealthController } from './controllers/health.controller';
 import { Role } from './models/entities/role.entity';
@@ -56,6 +57,7 @@ import { RolePrivilegeV2 } from './models/entities/role-privilege-v2.entity';
     EventsModule,
     PrivilegeSectionsModule,
     PrivilegesV2Module,
+    SeedModule,
   ],
   controllers: [HealthController],
   providers: [JwtStrategy],

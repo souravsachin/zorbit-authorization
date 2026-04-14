@@ -66,3 +66,31 @@ export class UserRolesController {
     return this.userRolesService.removeRole(orgId, userId, roleId);
   }
 }
+
+/**
+ * User privilege resolution endpoint (separate controller for the privilege path).
+ * Used by the navigation service to filter menu items by user privileges.
+ */
+@ApiTags('user-privileges')
+@ApiBearerAuth()
+@Controller('api/v1/O/:orgId/users/:userId/privileges')
+@UseGuards(JwtAuthGuard, NamespaceGuard)
+export class UserPrivilegesController {
+  constructor(private readonly userRolesService: UserRolesService) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'List user privilege codes',
+    description: 'Get all privilege codes for a user, resolved through their roles. Used by navigation service for menu filtering.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiParam({ name: 'userId', description: 'User short hash ID', example: 'U-81F3' })
+  @ApiResponse({ status: 200, description: 'List of privilege codes returned.' })
+  async getPrivilegeCodes(
+    @Param('orgId') orgId: string,
+    @Param('userId') userId: string,
+  ): Promise<{ privilegeCodes: string[] }> {
+    const privilegeCodes = await this.userRolesService.getPrivilegeCodesForUser(orgId, userId);
+    return { privilegeCodes };
+  }
+}

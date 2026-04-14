@@ -99,9 +99,19 @@ Service runs on port 3002 (default). Production/server: port 3102.
 - DELETE /api/v1/O/:orgId/roles/:roleId — Delete a role
 - POST /api/v1/O/:orgId/roles/:roleId/privileges — Assign privilege to role
 - DELETE /api/v1/O/:orgId/roles/:roleId/privileges/:privilegeId — Revoke privilege from role
+- GET /api/v1/O/:orgId/users/:userId/roles — List user roles
 - POST /api/v1/O/:orgId/users/:userId/roles — Assign role to user
 - DELETE /api/v1/O/:orgId/users/:userId/roles/:roleId — Remove role from user
+- GET /api/v1/O/:orgId/users/:userId/privileges — Get user privilege codes (resolved through roles, used by navigation service for menu filtering)
 - POST /api/v1/G/authorize — Evaluate an authorization policy decision
+- GET /api/v1/G/privileges — List all v2 privileges
+- POST /api/v1/G/privileges — Create v2 privilege
+- GET /api/v1/G/privileges/:id — Get v2 privilege
+- PUT /api/v1/G/privileges/:id — Update v2 privilege
+- DELETE /api/v1/G/privileges/:id — Delete v2 privilege
+- GET /api/v1/G/roles/:roleId/privileges — List v2 privileges for role
+- POST /api/v1/G/roles/:roleId/privileges — Assign v2 privileges to role
+- DELETE /api/v1/G/roles/:roleId/privileges/:privId — Revoke v2 privilege from role
 
 ## Development Guidelines
 

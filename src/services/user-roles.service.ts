@@ -5,9 +5,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { UserRole } from '../models/entities/user-role.entity';
 import { Role } from '../models/entities/role.entity';
+import { RolePrivilegeV2 } from '../models/entities/role-privilege-v2.entity';
+import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 
 @Injectable()
 export class UserRolesService {
@@ -18,6 +20,10 @@ export class UserRolesService {
     private readonly userRoleRepository: Repository<UserRole>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(RolePrivilegeV2)
+    private readonly rolePrivilegeV2Repository: Repository<RolePrivilegeV2>,
+    @InjectRepository(PrivilegeV2)
+    private readonly privilegeV2Repository: Repository<PrivilegeV2>,
   ) {}
 
   /**
@@ -124,5 +130,49 @@ export class UserRolesService {
       where: { userHashId, organizationHashId: orgId },
     });
     return userRoles.map((ur) => ur.roleHashId);
+  }
+
+  /**
+   * Get all privilege codes (v2 navigation-driven) for a user in an organization.
+   * Resolves: user -> roles -> role_privileges_v2 -> privilege_v2.privilegeCode
+   * Used by the navigation service to filter menu items.
+   */
+  async getPrivilegeCodesForUser(orgId: string, userHashId: string): Promise<string[]> {
+    // Get user's roles in this org
+    const userRoles = await this.userRoleRepository.find({
+      where: { userHashId, organizationHashId: orgId },
+    });
+
+    if (userRoles.length === 0) {
+      return [];
+    }
+
+    // Resolve role hashIds to role UUIDs
+    const roleHashIds = userRoles.map((ur) => ur.roleHashId);
+    const roles = await this.roleRepository.find({
+      where: { hashId: In(roleHashIds), organizationHashId: orgId },
+    });
+
+    if (roles.length === 0) {
+      return [];
+    }
+
+    const roleUuids = roles.map((r) => r.id);
+
+    // Get all v2 privilege assignments for these roles
+    const rolePrivileges = await this.rolePrivilegeV2Repository.find({
+      where: { roleId: In(roleUuids) },
+      relations: ['privilege'],
+    });
+
+    // Collect unique privilege codes
+    const codes = new Set<string>();
+    for (const rp of rolePrivileges) {
+      if (rp.privilege?.privilegeCode) {
+        codes.add(rp.privilege.privilegeCode);
+      }
+    }
+
+    return Array.from(codes);
   }
 }

@@ -128,7 +128,7 @@
       "feRoute": "/m/authorization/guide/lifecycle"
     }
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "moduleId": "zorbit-cor-authorization",
   "placement": {
     "scaffold": "Platform Core",
@@ -157,12 +157,41 @@
                 "pageSize": 25
               },
               "columns": [
-                { "key": "code", "label": "Code", "type": "id", "sortable": true, "filterable": true },
-                { "key": "name", "label": "Name", "type": "text", "sortable": true, "filterable": true },
-                { "key": "privilegeCount", "label": "Privileges", "type": "number", "align": "right", "sortable": true },
-                { "key": "createdAt", "label": "Created", "type": "datetime", "format": "relative", "sortable": true }
+                {
+                  "key": "code",
+                  "label": "Code",
+                  "type": "id",
+                  "sortable": true,
+                  "filterable": true
+                },
+                {
+                  "key": "name",
+                  "label": "Name",
+                  "type": "text",
+                  "sortable": true,
+                  "filterable": true
+                },
+                {
+                  "key": "privilegeCount",
+                  "label": "Privileges",
+                  "type": "number",
+                  "align": "right",
+                  "sortable": true
+                },
+                {
+                  "key": "createdAt",
+                  "label": "Created",
+                  "type": "datetime",
+                  "format": "relative",
+                  "sortable": true
+                }
               ],
-              "defaultSort": [ { "field": "name", "order": "asc" } ]
+              "defaultSort": [
+                {
+                  "field": "name",
+                  "order": "asc"
+                }
+              ]
             }
           },
           {
@@ -179,12 +208,41 @@
                 "pageSize": 50
               },
               "columns": [
-                { "key": "code", "label": "Code", "type": "id", "sortable": true, "filterable": true },
-                { "key": "label", "label": "Label", "type": "text", "sortable": true, "filterable": true },
-                { "key": "resource", "label": "Resource", "type": "chip", "sortable": true, "filterable": true },
-                { "key": "action", "label": "Action", "type": "chip", "sortable": true, "filterable": true }
+                {
+                  "key": "code",
+                  "label": "Code",
+                  "type": "id",
+                  "sortable": true,
+                  "filterable": true
+                },
+                {
+                  "key": "label",
+                  "label": "Label",
+                  "type": "text",
+                  "sortable": true,
+                  "filterable": true
+                },
+                {
+                  "key": "resource",
+                  "label": "Resource",
+                  "type": "chip",
+                  "sortable": true,
+                  "filterable": true
+                },
+                {
+                  "key": "action",
+                  "label": "Action",
+                  "type": "chip",
+                  "sortable": true,
+                  "filterable": true
+                }
               ],
-              "defaultSort": [ { "field": "code", "order": "asc" } ]
+              "defaultSort": [
+                {
+                  "field": "code",
+                  "order": "asc"
+                }
+              ]
             }
           },
           {
@@ -239,19 +297,6 @@
         ],
         "label": "Guide",
         "sortOrder": 90
-      },
-      {
-        "id": "deployments",
-        "items": [
-          {
-            "icon": "server",
-            "label": "Deployments",
-            "feRoute": "/m/authorization/deployments",
-            "feComponent": "DeploymentsView"
-          }
-        ],
-        "label": "Deployments",
-        "sortOrder": 91
       },
       {
         "id": "db",

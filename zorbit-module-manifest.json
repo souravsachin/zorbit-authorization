@@ -128,7 +128,7 @@
       "feRoute": "/m/authorization/guide/lifecycle"
     }
   },
-  "version": "1.2.0",
+  "version": "1.3.0",
   "moduleId": "zorbit-cor-authorization",
   "placement": {
     "scaffold": "Platform Core",
@@ -140,6 +140,69 @@
   "moduleType": "cor",
   "navigation": {
     "sections": [
+      {
+        "id": "guide",
+        "label": "Guide",
+        "sortOrder": 0,
+        "icon": "menu_book",
+        "items": [
+          {
+            "label": "Intro",
+            "feRoute": "/m/authorization/guide/intro",
+            "icon": "BookOpen",
+            "feComponent": "@platform:GuideIntroView",
+            "sortOrder": 1
+          },
+          {
+            "label": "Presentation",
+            "feRoute": "/m/authorization/guide/presentation",
+            "icon": "Presentation",
+            "feComponent": "@platform:GuideSlideDeck",
+            "sortOrder": 2
+          },
+          {
+            "label": "Lifecycle",
+            "feRoute": "/m/authorization/guide/lifecycle",
+            "icon": "GitBranch",
+            "feComponent": "@platform:GuideLifecycle",
+            "sortOrder": 3
+          },
+          {
+            "label": "Videos",
+            "feRoute": "/m/authorization/guide/videos",
+            "icon": "PlayCircle",
+            "feComponent": "@platform:GuideVideos",
+            "sortOrder": 4
+          },
+          {
+            "label": "Resources",
+            "feRoute": "/m/authorization/guide/resources",
+            "icon": "FolderOpen",
+            "feComponent": "@platform:GuideDocs",
+            "sortOrder": 5
+          },
+          {
+            "label": "Pricing",
+            "feRoute": "/m/authorization/guide/pricing",
+            "icon": "Tag",
+            "feComponent": "@platform:GuidePricing",
+            "sortOrder": 6
+          }
+        ]
+      },
+      {
+        "id": "db",
+        "items": [
+          {
+            "icon": "database",
+            "label": "DB Operations",
+            "feRoute": "/m/authorization/db",
+            "feComponent": "DbOperationsPanel"
+          }
+        ],
+        "label": "Database",
+        "sortOrder": 10
+      },
       {
         "id": "authorization",
         "items": [
@@ -253,63 +316,8 @@
             "feComponent": "PlaceholderPage"
           }
         ],
-        "label": "Authorization"
-      },
-      {
-        "id": "guide",
-        "items": [
-          {
-            "icon": "book-open",
-            "label": "Intro",
-            "feRoute": "/m/authorization/guide/intro",
-            "feComponent": "GuideIntroView"
-          },
-          {
-            "icon": "presentation",
-            "label": "Presentation",
-            "feRoute": "/m/authorization/guide/presentation",
-            "feComponent": "GuideSlideDeck"
-          },
-          {
-            "icon": "git-branch",
-            "label": "Lifecycle",
-            "feRoute": "/m/authorization/guide/lifecycle",
-            "feComponent": "GuideLifecycle"
-          },
-          {
-            "icon": "video",
-            "label": "Videos",
-            "feRoute": "/m/authorization/guide/videos",
-            "feComponent": "GuideVideos"
-          },
-          {
-            "icon": "file-text",
-            "label": "Resources",
-            "feRoute": "/m/authorization/guide/resources",
-            "feComponent": "GuideDocs"
-          },
-          {
-            "icon": "dollar-sign",
-            "label": "Pricing",
-            "feRoute": "/m/authorization/guide/pricing",
-            "feComponent": "GuidePricing"
-          }
-        ],
-        "label": "Guide",
-        "sortOrder": 90
-      },
-      {
-        "id": "db",
-        "items": [
-          {
-            "icon": "database",
-            "label": "DB Operations",
-            "feRoute": "/m/authorization/db",
-            "feComponent": "DbOperationsPanel"
-          }
-        ],
-        "label": "Database",
-        "sortOrder": 92
+        "label": "Authorization",
+        "sortOrder": 20
       }
     ]
   },

@@ -13,6 +13,7 @@ import {
   AuthorizeResponseDto,
 } from '../models/dto/authorize-request.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
+import { ZorbitPrivilegeGuard } from '../middleware/zorbit-privilege.guard';
 
 /**
  * Policy evaluation endpoint.
@@ -21,7 +22,7 @@ import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
 @ApiTags('policy')
 @ApiBearerAuth()
 @Controller('api/v1/G')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ZorbitPrivilegeGuard)
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 

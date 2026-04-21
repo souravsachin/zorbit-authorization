@@ -1,7 +1,12 @@
-import { Controller, Post, Delete, Query, Logger } from '@nestjs/common';
+import { Controller, Post, Delete, Query, Logger, UseGuards } from '@nestjs/common';
 import { SeedService } from '../services/seed.service';
+import { SeedAuthGuard } from '../middleware/seed-auth.guard';
+import { ZorbitPrivilegeGuard } from '../middleware/zorbit-privilege.guard';
+import { RequirePrivileges } from '../middleware/decorators';
 
 @Controller('api/v1/G/authorization')
+@UseGuards(SeedAuthGuard, ZorbitPrivilegeGuard)
+@RequirePrivileges('platform.seed.execute')
 export class SeedController {
   private readonly logger = new Logger(SeedController.name);
 
@@ -10,10 +15,9 @@ export class SeedController {
   /**
    * POST /api/v1/G/authorization/seed
    * System minimum seed — 15 standard roles + privileges. Idempotent.
-   * No JWT required — admin bootstrap tool.
    */
   @Post('seed')
-  async seedSystem(): Promise<{ success: boolean; seeded: { roles: number; privileges: number } }> {
+  async seedSystem() {
     const seeded = await this.seedService.seedSystem();
     return { success: true, seeded };
   }
@@ -21,7 +25,6 @@ export class SeedController {
   /**
    * POST /api/v1/G/authorization/seed/demo
    * Demo data — assign demo users to org_admin roles. Idempotent.
-   * No JWT required — admin bootstrap tool.
    */
   @Post('seed/demo')
   async seedDemo(): Promise<{ success: boolean; seeded: { roles: number; privileges: number } }> {
@@ -32,7 +35,6 @@ export class SeedController {
   /**
    * DELETE /api/v1/G/authorization/seed/demo
    * Flush demo user-role assignments.
-   * No JWT required — admin bootstrap tool.
    */
   @Delete('seed/demo')
   async flushDemo(): Promise<{ success: boolean; flushed: { roles: number; privileges: number } }> {
@@ -43,7 +45,6 @@ export class SeedController {
   /**
    * DELETE /api/v1/G/authorization/seed/all?confirm=yes
    * Flush all roles, privileges, and assignments. Requires ?confirm=yes.
-   * No JWT required — admin bootstrap tool.
    */
   @Delete('seed/all')
   async flushAll(

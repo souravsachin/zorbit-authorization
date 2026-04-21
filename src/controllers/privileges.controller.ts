@@ -17,6 +17,8 @@ import { UpdatePrivilegeDto } from '../models/dto/update-privilege.dto';
 import { AssignPrivilegeDto } from '../models/dto/assign-privilege.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
 import { NamespaceGuard } from '../middleware/namespace.guard';
+import { ZorbitPrivilegeGuard } from '../middleware/zorbit-privilege.guard';
+import { RequirePrivileges } from '../middleware/decorators';
 import { Privilege } from '../models/entities/privilege.entity';
 
 /**
@@ -26,7 +28,7 @@ import { Privilege } from '../models/entities/privilege.entity';
 @ApiTags('privileges')
 @ApiBearerAuth()
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ZorbitPrivilegeGuard)
 export class PrivilegesController {
   constructor(private readonly privilegesService: PrivilegesService) {}
 
@@ -34,6 +36,7 @@ export class PrivilegesController {
 
   @Get('api/v1/O/:orgId/privileges')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.read')
   @ApiOperation({ summary: 'List privileges', description: 'List all privileges in an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiResponse({ status: 200, description: 'List of privileges returned.' })
@@ -43,6 +46,7 @@ export class PrivilegesController {
 
   @Post('api/v1/O/:orgId/privileges')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create privilege', description: 'Create a new privilege in an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
@@ -56,6 +60,7 @@ export class PrivilegesController {
 
   @Get('api/v1/O/:orgId/privileges/:id')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.read')
   @ApiOperation({ summary: 'Get privilege', description: 'Get a specific privilege by hashId.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiParam({ name: 'id', description: 'Privilege short hash ID', example: 'PRV-81F3' })
@@ -70,6 +75,7 @@ export class PrivilegesController {
 
   @Put('api/v1/O/:orgId/privileges/:id')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.update')
   @ApiOperation({ summary: 'Update privilege', description: 'Update a privilege in an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiParam({ name: 'id', description: 'Privilege short hash ID', example: 'PRV-81F3' })
@@ -85,6 +91,7 @@ export class PrivilegesController {
 
   @Delete('api/v1/O/:orgId/privileges/:id')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete privilege', description: 'Soft-delete a privilege in an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
@@ -102,6 +109,7 @@ export class PrivilegesController {
 
   @Get('api/v1/O/:orgId/roles/:roleId/privileges')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.read')
   @ApiOperation({ summary: 'List role privileges', description: 'List privileges assigned to a role.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
@@ -115,6 +123,7 @@ export class PrivilegesController {
 
   @Post('api/v1/O/:orgId/roles/:roleId/privileges')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.assign')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Assign privileges to role', description: 'Assign one or more privileges to a role.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
@@ -130,6 +139,7 @@ export class PrivilegesController {
 
   @Delete('api/v1/O/:orgId/roles/:roleId/privileges/:privId')
   @UseGuards(NamespaceGuard)
+  @RequirePrivileges('authorization.privilege.revoke')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Revoke privilege from role', description: 'Revoke a privilege from a role.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })

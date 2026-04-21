@@ -5,14 +5,8 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { JwtPayload } from './jwt.strategy';
-import { UserRole } from '../models/entities/user-role.entity';
-import { Role } from '../models/entities/role.entity';
-
-/** Role names that grant admin-level access to operate on other users within the same org. */
-const ADMIN_ROLE_NAMES = ['org-admin', 'super-admin'];
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from './decorators';
 
 /**
  * Guard that enforces namespace isolation.
@@ -22,36 +16,44 @@ const ADMIN_ROLE_NAMES = ['org-admin', 'super-admin'];
  *
  * For User-scoped routes (U namespace):
  *   - Self-operations (userId === JWT sub) are always allowed.
- *   - Admin operations (userId !== JWT sub) are allowed if the authenticated
- *     user holds an "org-admin" or "super-admin" role within the SAME org.
+ *   - Users with 'platform.namespace.bypass' privilege can operate cross-org/cross-user.
  *   - Otherwise the request is rejected.
  *
  * This prevents users from accessing resources outside their namespace
- * while allowing admins to manage users within their organization.
+ * while allowing privileged users to manage resources across namespaces.
  */
 @Injectable()
 export class NamespaceGuard implements CanActivate {
   private readonly logger = new Logger(NamespaceGuard.name);
 
-  constructor(
-    @InjectRepository(UserRole)
-    private readonly userRoleRepository: Repository<UserRole>,
-    @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
+    // Skip namespace check for @Public() routes
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
+
     const request = context.switchToHttp().getRequest();
-    const user: JwtPayload | undefined = request.user;
+    const user = request.user;
 
     if (!user) {
       throw new ForbiddenException('Authentication required');
     }
 
     const params = request.params;
+    const canBypass = user.privileges?.includes('platform.namespace.bypass');
 
     // Organization namespace check
     if (params.orgId && params.orgId !== user.org) {
+      if (canBypass) {
+        this.logger.log(
+          `Privileged user ${user.sub} accessing org ${params.orgId} (own org: ${user.org})`,
+        );
+        return true;
+      }
       throw new ForbiddenException(
         `Access denied: namespace mismatch for organization ${params.orgId}`,
       );
@@ -59,49 +61,17 @@ export class NamespaceGuard implements CanActivate {
 
     // User namespace check
     if (params.userId && params.userId !== user.sub) {
-      // Target user differs from authenticated user — check for admin role
-      const isAdmin = await this.hasAdminRole(user.sub, user.org);
-      if (!isAdmin) {
-        throw new ForbiddenException(
-          `Access denied: namespace mismatch for user ${params.userId}`,
+      if (canBypass) {
+        this.logger.log(
+          `Privileged user ${user.sub} operating on user ${params.userId} in org ${user.org}`,
         );
+        return true;
       }
-      this.logger.log(
-        `Admin ${user.sub} operating on user ${params.userId} in org ${user.org}`,
+      throw new ForbiddenException(
+        `Access denied: namespace mismatch for user ${params.userId}`,
       );
     }
 
     return true;
-  }
-
-  /**
-   * Check whether the authenticated user holds an admin role in the given org.
-   * Looks up user_roles -> roles to find role names matching ADMIN_ROLE_NAMES.
-   */
-  private async hasAdminRole(
-    userHashId: string,
-    orgHashId: string,
-  ): Promise<boolean> {
-    const userRoles = await this.userRoleRepository.find({
-      where: { userHashId, organizationHashId: orgHashId },
-    });
-
-    if (userRoles.length === 0) {
-      return false;
-    }
-
-    const roleHashIds = userRoles.map((ur) => ur.roleHashId);
-
-    // Check if any of the user's roles are admin roles
-    for (const roleHashId of roleHashIds) {
-      const role = await this.roleRepository.findOne({
-        where: { hashId: roleHashId, organizationHashId: orgHashId },
-      });
-      if (role && ADMIN_ROLE_NAMES.includes(role.name)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 }

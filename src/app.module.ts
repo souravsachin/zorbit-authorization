@@ -13,6 +13,7 @@ import { PrivilegesV2Module } from './modules/privileges-v2.module';
 import { SeedModule } from './modules/seed.module';
 import { JwtStrategy } from './middleware/jwt.strategy';
 import { HealthController } from './controllers/health.controller';
+import { ModuleAnnouncementService } from './events/module-announcement.service';
 import { Role } from './models/entities/role.entity';
 import { Privilege } from './models/entities/privilege.entity';
 import { RolePrivilege } from './models/entities/role-privilege.entity';
@@ -60,6 +61,6 @@ import { RolePrivilegeV2 } from './models/entities/role-privilege-v2.entity';
     SeedModule,
   ],
   controllers: [HealthController],
-  providers: [JwtStrategy],
+  providers: [JwtStrategy, ModuleAnnouncementService],
 })
 export class AppModule {}

@@ -16,6 +16,8 @@ import { CreatePrivilegeV2Dto } from '../models/dto/create-privilege-v2.dto';
 import { UpdatePrivilegeV2Dto } from '../models/dto/update-privilege-v2.dto';
 import { AssignPrivilegeV2Dto } from '../models/dto/assign-privilege-v2.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
+import { ZorbitPrivilegeGuard } from '../middleware/zorbit-privilege.guard';
+import { RequirePrivileges } from '../middleware/decorators';
 import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 
 /**
@@ -25,13 +27,14 @@ import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 @ApiTags('privileges-v2')
 @ApiBearerAuth()
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ZorbitPrivilegeGuard)
 export class PrivilegesV2Controller {
   constructor(private readonly privilegesService: PrivilegesV2Service) {}
 
   // ── Privilege CRUD (Global) ──────────────────────────────────────
 
   @Get('api/v1/G/privileges')
+  @RequirePrivileges('authorization.privilege.read')
   @ApiOperation({ summary: 'List privileges (v2)', description: 'List all navigation-driven privileges.' })
   @ApiResponse({ status: 200, description: 'List of privileges returned.' })
   async findAll(): Promise<PrivilegeV2[]> {
@@ -39,6 +42,7 @@ export class PrivilegesV2Controller {
   }
 
   @Post('api/v1/G/privileges')
+  @RequirePrivileges('authorization.privilege.create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create privilege (v2)', description: 'Create a new navigation-driven privilege.' })
   @ApiResponse({ status: 201, description: 'Privilege created successfully.' })
@@ -48,6 +52,7 @@ export class PrivilegesV2Controller {
   }
 
   @Get('api/v1/G/privileges/:id')
+  @RequirePrivileges('authorization.privilege.read')
   @ApiOperation({ summary: 'Get privilege (v2)', description: 'Get a single navigation-driven privilege by ID.' })
   @ApiParam({ name: 'id', description: 'Privilege ID', example: 'PRV-A1B2' })
   @ApiResponse({ status: 200, description: 'Privilege returned.' })
@@ -57,6 +62,7 @@ export class PrivilegesV2Controller {
   }
 
   @Put('api/v1/G/privileges/:id')
+  @RequirePrivileges('authorization.privilege.update')
   @ApiOperation({ summary: 'Update privilege (v2)', description: 'Update a navigation-driven privilege.' })
   @ApiParam({ name: 'id', description: 'Privilege ID', example: 'PRV-A1B2' })
   @ApiResponse({ status: 200, description: 'Privilege updated successfully.' })
@@ -69,6 +75,7 @@ export class PrivilegesV2Controller {
   }
 
   @Delete('api/v1/G/privileges/:id')
+  @RequirePrivileges('authorization.privilege.delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete privilege (v2)', description: 'Delete a navigation-driven privilege.' })
   @ApiParam({ name: 'id', description: 'Privilege ID', example: 'PRV-A1B2' })
@@ -81,6 +88,7 @@ export class PrivilegesV2Controller {
   // ── Role-Privilege Assignment (Global) ────────────────────────────
 
   @Get('api/v1/G/roles/:roleId/privileges')
+  @RequirePrivileges('authorization.privilege.read')
   @ApiOperation({ summary: 'List role privileges (v2)', description: 'List navigation-driven privileges assigned to a role.' })
   @ApiParam({ name: 'roleId', description: 'Role UUID or hash ID', example: 'ROL-92AF' })
   @ApiResponse({ status: 200, description: 'List of privileges returned.' })
@@ -91,6 +99,7 @@ export class PrivilegesV2Controller {
   }
 
   @Post('api/v1/G/roles/:roleId/privileges')
+  @RequirePrivileges('authorization.privilege.assign')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Assign privileges to role (v2)', description: 'Assign navigation-driven privileges to a role.' })
   @ApiParam({ name: 'roleId', description: 'Role UUID or hash ID', example: 'ROL-92AF' })
@@ -103,6 +112,7 @@ export class PrivilegesV2Controller {
   }
 
   @Delete('api/v1/G/roles/:roleId/privileges/:privId')
+  @RequirePrivileges('authorization.privilege.revoke')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Revoke privilege from role (v2)', description: 'Revoke a navigation-driven privilege from a role.' })
   @ApiParam({ name: 'roleId', description: 'Role UUID or hash ID', example: 'ROL-92AF' })

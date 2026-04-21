@@ -16,6 +16,8 @@ import { CreateRoleDto } from '../models/dto/create-role.dto';
 import { UpdateRoleDto } from '../models/dto/update-role.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
 import { NamespaceGuard } from '../middleware/namespace.guard';
+import { ZorbitPrivilegeGuard } from '../middleware/zorbit-privilege.guard';
+import { RequirePrivileges } from '../middleware/decorators';
 import { Role } from '../models/entities/role.entity';
 
 /**
@@ -24,11 +26,12 @@ import { Role } from '../models/entities/role.entity';
 @ApiTags('roles')
 @ApiBearerAuth()
 @Controller('api/v1/O/:orgId/roles')
-@UseGuards(JwtAuthGuard, NamespaceGuard)
+@UseGuards(JwtAuthGuard, NamespaceGuard, ZorbitPrivilegeGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
+  @RequirePrivileges('authorization.role.read')
   @ApiOperation({ summary: 'List roles', description: 'List all roles in an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiResponse({ status: 200, description: 'List of roles returned.' })
@@ -37,6 +40,7 @@ export class RolesController {
   }
 
   @Post()
+  @RequirePrivileges('authorization.role.create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create role', description: 'Create a new role in an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
@@ -49,6 +53,7 @@ export class RolesController {
   }
 
   @Get(':roleId')
+  @RequirePrivileges('authorization.role.read')
   @ApiOperation({ summary: 'Get role', description: 'Get a single role by hashId within an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
@@ -62,6 +67,7 @@ export class RolesController {
   }
 
   @Put(':roleId')
+  @RequirePrivileges('authorization.role.update')
   @ApiOperation({ summary: 'Update role', description: 'Update a role within an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
   @ApiParam({ name: 'roleId', description: 'Role short hash ID', example: 'ROL-92AF' })
@@ -76,6 +82,7 @@ export class RolesController {
   }
 
   @Delete(':roleId')
+  @RequirePrivileges('authorization.role.delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete role', description: 'Delete a role within an organization.' })
   @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })

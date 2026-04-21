@@ -16,6 +16,8 @@ import { CreatePrivilegeSectionDto } from '../models/dto/create-privilege-sectio
 import { UpdatePrivilegeSectionDto } from '../models/dto/update-privilege-section.dto';
 import { AssignSectionPrivilegesDto } from '../models/dto/assign-section-privileges.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
+import { ZorbitPrivilegeGuard } from '../middleware/zorbit-privilege.guard';
+import { RequirePrivileges } from '../middleware/decorators';
 import { PrivilegeSection } from '../models/entities/privilege-section.entity';
 import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 
@@ -26,7 +28,8 @@ import { PrivilegeV2 } from '../models/entities/privilege-v2.entity';
 @ApiTags('privilege-sections')
 @ApiBearerAuth()
 @Controller('api/v1/G/sections')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ZorbitPrivilegeGuard)
+@RequirePrivileges('authorization.privilege.read')
 export class PrivilegeSectionsController {
   constructor(
     private readonly sectionsService: PrivilegeSectionsService,
@@ -40,6 +43,7 @@ export class PrivilegeSectionsController {
   }
 
   @Post()
+  @RequirePrivileges('authorization.privilege.create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create privilege section', description: 'Create a new privilege section.' })
   @ApiResponse({ status: 201, description: 'Privilege section created successfully.' })
@@ -60,6 +64,7 @@ export class PrivilegeSectionsController {
   }
 
   @Put(':id')
+  @RequirePrivileges('authorization.privilege.update')
   @ApiOperation({ summary: 'Update privilege section', description: 'Update a privilege section.' })
   @ApiParam({ name: 'id', description: 'Section ID', example: 'SEC-A1B2' })
   @ApiResponse({ status: 200, description: 'Privilege section updated successfully.' })
@@ -72,6 +77,7 @@ export class PrivilegeSectionsController {
   }
 
   @Delete(':id')
+  @RequirePrivileges('authorization.privilege.delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete privilege section', description: 'Delete a privilege section.' })
   @ApiParam({ name: 'id', description: 'Section ID', example: 'SEC-A1B2' })
@@ -82,6 +88,7 @@ export class PrivilegeSectionsController {
   }
 
   @Post(':id/privileges')
+  @RequirePrivileges('authorization.privilege.assign')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Assign privileges to section', description: 'Assign one or more privileges to a section by updating their sectionId.' })
   @ApiParam({ name: 'id', description: 'Section ID', example: 'SEC-A1B2' })

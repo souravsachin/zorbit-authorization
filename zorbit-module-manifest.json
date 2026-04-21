@@ -346,5 +346,8 @@
         "status": "unknown"
       }
     ]
+  },
+  "audit": {
+    "latestReport": null
   }
 }

@@ -128,7 +128,7 @@
       "feRoute": "/m/authorization/guide/lifecycle"
     }
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "moduleId": "zorbit-cor-authorization",
   "placement": {
     "scaffold": "Platform Core",
@@ -147,15 +147,45 @@
             "icon": "Shield",
             "label": "Roles",
             "feRoute": "/m/authorization/roles",
+            "beRoute": "/api/authorization/api/v1/O/{{org_id}}/roles",
             "privilege": "",
-            "feComponent": "RolesPage"
+            "feComponent": "zorbit-pfs-datatable:DataTable",
+            "feProps": {
+              "pageId": "DT-AUZ-ROL",
+              "dataSource": {
+                "beRoute": "/api/authorization/api/v1/O/{{org_id}}/roles",
+                "pageSize": 25
+              },
+              "columns": [
+                { "key": "code", "label": "Code", "type": "id", "sortable": true, "filterable": true },
+                { "key": "name", "label": "Name", "type": "text", "sortable": true, "filterable": true },
+                { "key": "privilegeCount", "label": "Privileges", "type": "number", "align": "right", "sortable": true },
+                { "key": "createdAt", "label": "Created", "type": "datetime", "format": "relative", "sortable": true }
+              ],
+              "defaultSort": [ { "field": "name", "order": "asc" } ]
+            }
           },
           {
             "icon": "Key",
             "label": "Privileges",
             "feRoute": "/m/authorization/privileges",
+            "beRoute": "/api/authorization/api/v1/G/privileges",
             "privilege": "",
-            "feComponent": "PrivilegesPage"
+            "feComponent": "zorbit-pfs-datatable:DataTable",
+            "feProps": {
+              "pageId": "DT-AUZ-PRV",
+              "dataSource": {
+                "beRoute": "/api/authorization/api/v1/G/privileges",
+                "pageSize": 50
+              },
+              "columns": [
+                { "key": "code", "label": "Code", "type": "id", "sortable": true, "filterable": true },
+                { "key": "label", "label": "Label", "type": "text", "sortable": true, "filterable": true },
+                { "key": "resource", "label": "Resource", "type": "chip", "sortable": true, "filterable": true },
+                { "key": "action", "label": "Action", "type": "chip", "sortable": true, "filterable": true }
+              ],
+              "defaultSort": [ { "field": "code", "order": "asc" } ]
+            }
           },
           {
             "icon": "Scale",

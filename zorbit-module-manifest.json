@@ -128,7 +128,7 @@
       "feRoute": "/m/authorization/guide/lifecycle"
     }
   },
-  "version": "1.3.0",
+  "version": "1.4.0",
   "moduleId": "zorbit-cor-authorization",
   "placement": {
     "scaffold": "Platform Core",
@@ -191,7 +191,7 @@
         ]
       },
       {
-        "id": "db",
+        "id": "zorbit-cor-authorization-db",
         "items": [
           {
             "icon": "database",

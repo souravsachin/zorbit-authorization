@@ -76,7 +76,7 @@ export class RolesService {
    */
   // Reserved role names — prevent privilege escalation via role naming
   private static readonly RESERVED_ROLE_NAMES = [
-    'superadmin', 'super', 'sysadmin', 'system', 'root', 'platform-admin',
+    'superadmin', 'super', 'sysadmin', 'system', 'root', 'platform_admin',
   ];
 
   async create(orgId: string, dto: CreateRoleDto): Promise<Partial<Role>> {

@@ -59,7 +59,7 @@ SLUG_TO_SECTION = {
     'zorbit-cor-module_registry': 'SEC-PLAT',
     'zorbit-cor-deployment_registry': 'SEC-PLAT',
     'zorbit-cor-observability': 'SEC-PLAT',
-    'zorbit-cor-seeder': 'SEC-PLAT',
+    'zorbit-pfs-seeder': 'SEC-PLAT',
     'zorbit-pfs-ai_gateway': 'SEC-AIPR',
     'zorbit-pfs-chat': 'SEC-CHAT',
     'zorbit-pfs-datatable': 'SEC-DTBL',

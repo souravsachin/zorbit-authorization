@@ -5,9 +5,11 @@ import {
   Delete,
   Param,
   Body,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { UserRolesService } from '../services/user-roles.service';
@@ -97,6 +99,121 @@ export class UserPrivilegesController {
   ): Promise<{ privilegeCodes: string[] }> {
     const privilegeCodes = await this.userRolesService.getPrivilegeCodesForUser(orgId, userId);
     return { privilegeCodes };
+  }
+}
+
+/**
+ * Self-namespace user routes for the SPA.
+ *
+ * Mounted at `/api/v1/U/:userId/...` so the SPA can fetch the
+ * caller's own roles and privileges immediately after login,
+ * without needing the org id in the URL. Cycle 102 (2026-04-25)
+ * caught these as 404s — the controllers were never declared.
+ *
+ * Authorisation contract (see `NamespaceGuard`):
+ *   - Self-callers (`params.userId === req.user.sub`) are always allowed.
+ *   - Otherwise the caller must hold `platform.namespace.bypass`.
+ *
+ * Org context is resolved from the JWT (`req.user.org`); these are
+ * deliberately NOT org-scoped at the URL level, because the SPA
+ * does not know the user's org id at the moment of the call.
+ *
+ * Empty arrays are returned (NOT 404) when the user has no roles
+ * or privileges — the SPA depends on this to render a clean
+ * "no access yet" UI rather than an error.
+ */
+@ApiTags('user-self')
+@ApiBearerAuth()
+@Controller('api/v1/U/:userId')
+@UseGuards(JwtAuthGuard, NamespaceGuard)
+export class UserSelfRolesController {
+  private readonly logger = new Logger(UserSelfRolesController.name);
+
+  constructor(private readonly userRolesService: UserRolesService) {}
+
+  /**
+   * GET /api/v1/U/:userId/roles
+   * Returns the user's role assignments in their own org. Used by the
+   * SPA after login to populate the "My Roles" panel and to drive
+   * client-side privilege gating.
+   */
+  @Get('roles')
+  @ApiOperation({
+    summary: 'List self roles',
+    description:
+      'List the calling user\'s role assignments. Org is resolved from ' +
+      'the JWT. Empty array (not 404) when the user has no roles.',
+  })
+  @ApiParam({ name: 'userId', description: 'User short hash ID', example: 'U-81F3' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of role assignments.',
+    schema: {
+      example: [
+        { roleHashId: 'R-SADMIN', roleName: 'Super Admin', scope: 'O', scopeId: 'O-ROOT' },
+      ],
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Missing/invalid JWT.' })
+  @ApiResponse({ status: 403, description: 'Cross-user read without bypass privilege.' })
+  async getSelfRoles(
+    @Param('userId') userId: string,
+    @Req() req: any,
+  ): Promise<{ roleHashId: string; roleName: string; scope: string; scopeId: string }[]> {
+    const orgId: string | undefined = req.user?.org;
+    if (!orgId) {
+      this.logger.warn(`getSelfRoles: JWT for ${userId} has no org claim`);
+      return [];
+    }
+
+    const roles = await this.userRolesService.findRolesForUser(orgId, userId);
+    return roles.map((r) => ({
+      roleHashId: r.roleHashId,
+      roleName: r.roleName,
+      scope: 'O',
+      scopeId: orgId,
+    }));
+  }
+
+  /**
+   * GET /api/v1/U/:userId/privileges
+   * Returns the user's resolved privilege codes in their own org.
+   * Each entry includes a `source` ("role") to leave room for future
+   * direct-grant or policy-derived sources without a contract change.
+   */
+  @Get('privileges')
+  @ApiOperation({
+    summary: 'List self privileges',
+    description:
+      'List the calling user\'s resolved privilege codes. Org is ' +
+      'resolved from the JWT. Empty array (not 404) when the user ' +
+      'has no privileges.',
+  })
+  @ApiParam({ name: 'userId', description: 'User short hash ID', example: 'U-81F3' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of resolved privilege codes.',
+    schema: {
+      example: [
+        { code: 'identity.user.read', source: 'role' },
+        { code: 'authorization.role.read', source: 'role' },
+      ],
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Missing/invalid JWT.' })
+  @ApiResponse({ status: 403, description: 'Cross-user read without bypass privilege.' })
+  async getSelfPrivileges(
+    @Param('userId') userId: string,
+    @Req() req: any,
+  ): Promise<{ code: string; source: string }[]> {
+    const orgId: string | undefined = req.user?.org;
+    if (!orgId) {
+      this.logger.warn(`getSelfPrivileges: JWT for ${userId} has no org claim`);
+      return [];
+    }
+
+    const codes = await this.userRolesService.getPrivilegeCodesForUser(orgId, userId);
+    return codes.map((code) => ({ code, source: 'role' }));
   }
 }
 

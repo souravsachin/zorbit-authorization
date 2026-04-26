@@ -41,6 +41,26 @@ export class PrivilegesV2Controller {
     return this.privilegesService.findAll();
   }
 
+  /**
+   * Lightweight count endpoint for global privileges list.
+   *
+   * Cycle-105 E-OVERFETCH (MSG-082): Privileges page / dashboard
+   * count badges fetched the full privilege list (with section join)
+   * just to read `length`. Returns `{count}` only — ~30 bytes
+   * payload. Re-uses `authorization.privilege.read` privilege.
+   */
+  @Get('api/v1/G/privileges/_count')
+  @RequirePrivileges('authorization.privilege.read')
+  @ApiOperation({
+    summary: 'Count privileges',
+    description:
+      'Count all v2 privileges. Returns {count: N} only — avoids fetching full list with section joins.',
+  })
+  @ApiResponse({ status: 200, description: 'Privilege count returned.' })
+  async countAll(): Promise<{ count: number }> {
+    return this.privilegesService.countAll();
+  }
+
   @Post('api/v1/G/privileges')
   @RequirePrivileges('authorization.privilege.create')
   @HttpCode(HttpStatus.CREATED)

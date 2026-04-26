@@ -60,6 +60,7 @@ describe('PrivilegesV2Service', () => {
             create: jest.fn(),
             save: jest.fn(),
             remove: jest.fn(),
+            count: jest.fn(),
           },
         },
         {
@@ -115,6 +116,15 @@ describe('PrivilegesV2Service', () => {
       });
       expect(result).toHaveLength(1);
       expect(result[0].privilegeCode).toBe('products.configurator.read');
+    });
+  });
+
+  describe('countAll (E-OVERFETCH cycle-105)', () => {
+    it('should return {count} of all privileges', async () => {
+      (privilegeRepository.count as jest.Mock).mockResolvedValueOnce(214);
+      const result = await service.countAll();
+      expect(result).toEqual({ count: 214 });
+      expect(privilegeRepository.count).toHaveBeenCalledWith();
     });
   });
 

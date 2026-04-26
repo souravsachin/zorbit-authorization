@@ -48,6 +48,20 @@ export class RolesService {
   }
 
   /**
+   * Count roles in an organization.
+   *
+   * Cycle-105 E-OVERFETCH (MSG-082): Roles page count badges
+   * fetched the full role list (~N rows) just to read `length`.
+   * Returns `{count}` only — ~30 bytes vs full payload.
+   */
+  async countByOrganization(orgId: string): Promise<{ count: number }> {
+    const count = await this.roleRepository.count({
+      where: { organizationHashId: orgId },
+    });
+    return { count };
+  }
+
+  /**
    * Find a single role by hashId, scoped to a specific organization.
    */
   async findOne(orgId: string, roleHashId: string): Promise<Partial<Role>> {

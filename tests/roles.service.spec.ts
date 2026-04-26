@@ -37,6 +37,7 @@ describe('RolesService', () => {
             create: jest.fn(),
             save: jest.fn(),
             remove: jest.fn(),
+            count: jest.fn(),
           },
         },
         {
@@ -58,6 +59,17 @@ describe('RolesService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('countByOrganization (E-OVERFETCH cycle-105)', () => {
+    it('should return {count} scoped to org', async () => {
+      (roleRepository.count as jest.Mock).mockResolvedValueOnce(5);
+      const result = await service.countByOrganization('O-92AF');
+      expect(result).toEqual({ count: 5 });
+      expect(roleRepository.count).toHaveBeenCalledWith({
+        where: { organizationHashId: 'O-92AF' },
+      });
+    });
   });
 
   describe('findAllByOrganization', () => {

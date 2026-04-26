@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+import { ZorbitAuthModule } from '@zorbit-platform/sdk-node';
 import { RolesModule } from './modules/roles.module';
 import { PrivilegesModule } from './modules/privileges.module';
 import { UserRolesModule } from './modules/user-roles.module';
@@ -11,7 +10,6 @@ import { EventsModule } from './modules/events.module';
 import { PrivilegeSectionsModule } from './modules/privilege-sections.module';
 import { PrivilegesV2Module } from './modules/privileges-v2.module';
 import { SeedModule } from './modules/seed.module';
-import { JwtStrategy } from './middleware/jwt.strategy';
 import { HealthController } from './controllers/health.controller';
 import { ModuleAnnouncementService } from './events/module-announcement.service';
 import { Role } from './models/entities/role.entity';
@@ -28,6 +26,17 @@ import { RolePrivilegeV2 } from './models/entities/role-privilege-v2.entity';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // EPIC-9 / SDK 0.5.0 — single-line auth wiring. Replaces per-feature
+    // PassportModule.register() + JwtModule.registerAsync() + local
+    // JwtStrategy. Provides Reflector, ZorbitJwtStrategy and the three
+    // Zorbit guards (Jwt/Namespace/Privilege) globally. Resolves the
+    // cycle-105 boot error:
+    //   - "[ZorbitJwtStrategy] cannot resolve JWT secret"
+    // Canonical reference: 02_repos/zorbit-pii-vault/src/app.module.ts
+    // and 02_repos/zorbit-identity/src/app.module.ts.
+    ZorbitAuthModule.forRoot({
+      jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-change-in-production',
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -43,14 +52,6 @@ import { RolePrivilegeV2 } from './models/entities/role-privilege-v2.entity';
         logging: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET', 'dev-secret-change-in-production'),
-      }),
-    }),
     RolesModule,
     PrivilegesModule,
     UserRolesModule,
@@ -61,6 +62,6 @@ import { RolePrivilegeV2 } from './models/entities/role-privilege-v2.entity';
     SeedModule,
   ],
   controllers: [HealthController],
-  providers: [JwtStrategy, ModuleAnnouncementService],
+  providers: [ModuleAnnouncementService],
 })
 export class AppModule {}

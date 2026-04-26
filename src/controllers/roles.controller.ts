@@ -39,6 +39,27 @@ export class RolesController {
     return this.rolesService.findAllByOrganization(orgId);
   }
 
+  /**
+   * Lightweight count endpoint for roles in an organization.
+   *
+   * Cycle-105 E-OVERFETCH (MSG-082): SPA Roles page count badge
+   * fetched the full role list just to read `length`. Returns
+   * `{count}` only — ~30 bytes payload.
+   * Re-uses `authorization.role.read` privilege.
+   */
+  @Get('_count')
+  @RequirePrivileges('authorization.role.read')
+  @ApiOperation({
+    summary: 'Count roles',
+    description:
+      'Count roles in an organization. Returns {count: N} only — ~30 bytes vs full list payload.',
+  })
+  @ApiParam({ name: 'orgId', description: 'Organization short hash ID', example: 'O-92AF' })
+  @ApiResponse({ status: 200, description: 'Role count returned.' })
+  async countRoles(@Param('orgId') orgId: string): Promise<{ count: number }> {
+    return this.rolesService.countByOrganization(orgId);
+  }
+
   @Post()
   @RequirePrivileges('authorization.role.create')
   @HttpCode(HttpStatus.CREATED)

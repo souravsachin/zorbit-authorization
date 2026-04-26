@@ -42,6 +42,18 @@ export class PrivilegesV2Service {
   }
 
   /**
+   * Count all privileges (global).
+   *
+   * Cycle-105 E-OVERFETCH (MSG-082): Privileges page count badges
+   * fetched the full privilege list (with section join) just to
+   * read `data.length`. Returns `{count}` only — ~30 bytes vs ~K KB.
+   */
+  async countAll(): Promise<{ count: number }> {
+    const count = await this.privilegeRepository.count();
+    return { count };
+  }
+
+  /**
    * Find a single privilege by ID.
    */
   async findOne(id: string): Promise<PrivilegeV2> {

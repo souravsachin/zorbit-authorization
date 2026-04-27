@@ -131,7 +131,7 @@
   "version": "1.4.0",
   "moduleId": "zorbit-cor-authorization",
   "placement": {
-    "scaffold": "Platform Core",
+    "scaffold": "core_platform_services",
     "sortOrder": 20,
     "capabilityArea": "Authorization",
     "scaffoldSortOrder": 10

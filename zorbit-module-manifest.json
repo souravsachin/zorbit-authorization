@@ -1,353 +1,105 @@
 {
-  "db": {
-    "dbName": "zorbit_authorization",
-    "dbType": "postgres",
-    "operations": {
-      "backup": {
-        "method": "POST",
-        "beRoute": "/api/authorization/api/v1/G/db/backup",
-        "privilege": "authorization.db.backup"
-      },
-      "restore": {
-        "method": "POST",
-        "beRoute": "/api/authorization/api/v1/G/db/restore",
-        "privilege": "authorization.db.restore",
-        "destructive": true
-      },
-      "flushAllData": {
-        "method": "DELETE",
-        "beRoute": "/api/authorization/api/v1/G/seed/all",
-        "privilege": "authorization.seed.all",
-        "destructive": true
-      },
-      "seedDemoData": {
-        "method": "POST",
-        "beRoute": "/api/authorization/api/v1/G/seed/demo",
-        "privilege": "authorization.seed.demo"
-      },
-      "flushDemoData": {
-        "method": "DELETE",
-        "beRoute": "/api/authorization/api/v1/G/seed/demo",
-        "privilege": "authorization.seed.demo"
-      },
-      "seedSystemMin": {
-        "method": "POST",
-        "beRoute": "/api/authorization/api/v1/G/seed/system-min",
-        "privilege": "authorization.seed.system-min"
-      }
-    }
-  },
-  "guide": {
-    "docs": {
-      "links": [
-        {
-          "href": "/api/authorization/api-docs",
-          "label": "REST API reference"
-        },
-        {
-          "href": "/m/authorization/guide/whitepaper.pdf",
-          "label": "Architecture whitepaper"
-        }
-      ],
-      "feRoute": "/m/authorization/guide/resources"
-    },
-    "intro": {
-      "feRoute": "/m/authorization/guide/intro",
-      "summary": "This is the Authorization Service module. Author its full description in the source manifest (US-MF-2089).",
-      "headline": "Authorization Service"
-    },
-    "slides": {
-      "deck": [
-        {
-          "body": "What this module does (TBD by module author).",
-          "title": "Overview"
-        },
-        {
-          "body": "Key capabilities this module exposes (TBD).",
-          "title": "Capabilities"
-        },
-        {
-          "body": "How other modules integrate with it (TBD).",
-          "title": "Integration"
-        }
-      ],
-      "feRoute": "/m/authorization/guide/presentation"
-    },
-    "videos": {
-      "entries": [],
-      "feRoute": "/m/authorization/guide/videos"
-    },
-    "pricing": {
-      "tiers": [
-        {
-          "name": "Community",
-          "features": [
-            "Basic features",
-            "Community support"
-          ],
-          "monthlyPrice": 0
-        },
-        {
-          "name": "Business",
-          "features": [
-            "All features",
-            "Email support"
-          ],
-          "monthlyPrice": 199
-        },
-        {
-          "name": "Enterprise",
-          "features": [
-            "Dedicated CSM",
-            "SLA"
-          ],
-          "monthlyPrice": null
-        }
-      ],
-      "feRoute": "/m/authorization/guide/pricing"
-    },
-    "lifecycle": {
-      "phases": [
-        {
-          "name": "Draft",
-          "description": "Author and iterate."
-        },
-        {
-          "name": "Review",
-          "description": "Peer review."
-        },
-        {
-          "name": "Published",
-          "description": "Live."
-        },
-        {
-          "name": "Retired",
-          "description": "Archived; read-only."
-        }
-      ],
-      "feRoute": "/m/authorization/guide/lifecycle"
-    }
-  },
-  "version": "1.4.0",
+  "manifestVersion": "2.0",
   "moduleId": "zorbit-cor-authorization",
+  "moduleType": "cor",
+  "version": "1.4.0",
   "placement": {
     "scaffold": "core_platform_services",
-    "sortOrder": 20,
-    "capabilityArea": "Authorization",
-    "scaffoldSortOrder": 10
+    "scaffoldSortOrder": 10,
+    "capabilityArea": "authorization",
+    "sortOrder": 10
   },
-  "moduleName": "Authorization",
-  "moduleType": "cor",
+  "registration": {
+    "kafkaTopic": "platform-module-announcements"
+  },
   "navigation": {
     "sections": [
       {
         "id": "guide",
-        "label": "Guide",
         "sortOrder": 0,
-        "icon": "menu_book",
         "items": [
           {
-            "label": "Intro",
+            "id": "intro",
+            "sortOrder": 1,
             "feRoute": "/m/authorization/guide/intro",
-            "icon": "BookOpen",
-            "feComponent": "@platform:GuideIntroView",
-            "sortOrder": 1
+            "feComponent": "@platform:GuideIntroView"
           },
           {
-            "label": "Presentation",
+            "id": "presentation",
+            "sortOrder": 2,
             "feRoute": "/m/authorization/guide/presentation",
-            "icon": "Presentation",
-            "feComponent": "@platform:GuideSlideDeck",
-            "sortOrder": 2
+            "feComponent": "@platform:GuideSlideDeck"
           },
           {
-            "label": "Lifecycle",
+            "id": "lifecycle",
+            "sortOrder": 3,
             "feRoute": "/m/authorization/guide/lifecycle",
-            "icon": "GitBranch",
-            "feComponent": "@platform:GuideLifecycle",
-            "sortOrder": 3
+            "feComponent": "@platform:GuideLifecycle"
           },
           {
-            "label": "Videos",
+            "id": "videos",
+            "sortOrder": 4,
             "feRoute": "/m/authorization/guide/videos",
-            "icon": "PlayCircle",
-            "feComponent": "@platform:GuideVideos",
-            "sortOrder": 4
+            "feComponent": "@platform:GuideVideos"
           },
           {
-            "label": "Resources",
+            "id": "resources",
+            "sortOrder": 5,
             "feRoute": "/m/authorization/guide/resources",
-            "icon": "FolderOpen",
-            "feComponent": "@platform:GuideDocs",
-            "sortOrder": 5
+            "feComponent": "@platform:GuideResources"
           },
           {
-            "label": "Pricing",
+            "id": "pricing",
+            "sortOrder": 6,
             "feRoute": "/m/authorization/guide/pricing",
-            "icon": "Tag",
-            "feComponent": "@platform:GuidePricing",
-            "sortOrder": 6
+            "feComponent": "@platform:GuidePricing"
           }
         ]
-      },
-      {
-        "id": "zorbit-cor-authorization-db",
-        "items": [
-          {
-            "icon": "database",
-            "label": "DB Operations",
-            "feRoute": "/m/authorization/db",
-            "feComponent": "DbOperationsPanel"
-          }
-        ],
-        "label": "Database",
-        "sortOrder": 10
-      },
-      {
-        "id": "authorization",
-        "items": [
-          {
-            "icon": "Shield",
-            "label": "Roles",
-            "feRoute": "/m/authorization/roles",
-            "beRoute": "/api/authorization/api/v1/O/{{org_id}}/roles",
-            "privilege": "",
-            "feComponent": "zorbit-pfs-datatable:DataTable",
-            "feProps": {
-              "pageId": "DT-AUZ-ROL",
-              "dataSource": {
-                "beRoute": "/api/authorization/api/v1/O/{{org_id}}/roles",
-                "pageSize": 25
-              },
-              "columns": [
-                {
-                  "key": "code",
-                  "label": "Code",
-                  "type": "id",
-                  "sortable": true,
-                  "filterable": true
-                },
-                {
-                  "key": "name",
-                  "label": "Name",
-                  "type": "text",
-                  "sortable": true,
-                  "filterable": true
-                },
-                {
-                  "key": "privilegeCount",
-                  "label": "Privileges",
-                  "type": "number",
-                  "align": "right",
-                  "sortable": true
-                },
-                {
-                  "key": "createdAt",
-                  "label": "Created",
-                  "type": "datetime",
-                  "format": "relative",
-                  "sortable": true
-                }
-              ],
-              "defaultSort": [
-                {
-                  "field": "name",
-                  "order": "asc"
-                }
-              ]
-            }
-          },
-          {
-            "icon": "Key",
-            "label": "Privileges",
-            "feRoute": "/m/authorization/privileges",
-            "beRoute": "/api/authorization/api/v1/G/privileges",
-            "privilege": "",
-            "feComponent": "zorbit-pfs-datatable:DataTable",
-            "feProps": {
-              "pageId": "DT-AUZ-PRV",
-              "dataSource": {
-                "beRoute": "/api/authorization/api/v1/G/privileges",
-                "pageSize": 50
-              },
-              "columns": [
-                {
-                  "key": "code",
-                  "label": "Code",
-                  "type": "id",
-                  "sortable": true,
-                  "filterable": true
-                },
-                {
-                  "key": "label",
-                  "label": "Label",
-                  "type": "text",
-                  "sortable": true,
-                  "filterable": true
-                },
-                {
-                  "key": "resource",
-                  "label": "Resource",
-                  "type": "chip",
-                  "sortable": true,
-                  "filterable": true
-                },
-                {
-                  "key": "action",
-                  "label": "Action",
-                  "type": "chip",
-                  "sortable": true,
-                  "filterable": true
-                }
-              ],
-              "defaultSort": [
-                {
-                  "field": "code",
-                  "order": "asc"
-                }
-              ]
-            }
-          },
-          {
-            "icon": "Scale",
-            "label": "Policy Evaluation",
-            "feRoute": "/m/authorization/policy-eval",
-            "privilege": "",
-            "feComponent": "PlaceholderPage"
-          }
-        ],
-        "label": "Authorization",
-        "sortOrder": 20
       }
     ]
+  },
+  "guide": {
+    "intro": {
+      "$src": "./manifest-content/guide/intro.md"
+    },
+    "slides": {
+      "decks": {
+        "$src": "./manifest-content/guide/slides/index.json"
+      }
+    },
+    "lifecycle": {
+      "$src": "./manifest-content/guide/lifecycle.json"
+    },
+    "videos": {
+      "playlists": {
+        "$src": "./manifest-content/guide/videos/index.json"
+      }
+    },
+    "resources": {
+      "$src": "./manifest-content/guide/resources.json"
+    },
+    "pricing": {
+      "$src": "./manifest-content/guide/pricing.json"
+    }
   },
   "deployments": {
-    "build": {
-      "builtAt": "2026-04-19T20:00:00Z",
-      "commitSha": "placeholder",
-      "dockerImage": "zorbit-cor-authorization:1.0.0",
-      "nodeVersion": "20.20.2"
-    },
+    "show": true,
     "health": {
       "beRoute": "/api/authorization/api/v1/G/health"
-    },
-    "runbook": {
-      "href": "/m/authorization/deployments/runbook"
-    },
-    "environments": [
-      {
-        "url": "https://zorbit-uat.onezippy.ai",
-        "name": "uat",
-        "status": "healthy"
-      },
-      {
-        "url": "https://zorbit.scalatics.com",
-        "name": "prod",
-        "status": "unknown"
-      }
-    ]
+    }
   },
-  "audit": {
-    "latestReport": null
-  }
+  "backend": {
+    "baseUrl": "http://localhost:3000",
+    "apiPrefix": "/api/authorization/api/v1"
+  },
+  "events": {
+    "publishes": [],
+    "subscribes": []
+  },
+  "errors": {
+    "$src": "./manifest-content/errors.json"
+  },
+  "dependencies": [
+    "zorbit-cor-event_bus"
+  ]
 }

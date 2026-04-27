@@ -1,0 +1,11 @@
+{
+  "tiers": [
+    {
+      "name": "Bundled with platform",
+      "monthlyPrice": null,
+      "features": [
+        "Included with every Zorbit deployment"
+      ]
+    }
+  ]
+}

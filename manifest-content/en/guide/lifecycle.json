@@ -1,0 +1,20 @@
+{
+  "phases": [
+    {
+      "name": "Draft",
+      "description": "Author and iterate."
+    },
+    {
+      "name": "Review",
+      "description": "Peer review."
+    },
+    {
+      "name": "Published",
+      "description": "Live."
+    },
+    {
+      "name": "Retired",
+      "description": "Archived; read-only."
+    }
+  ]
+}

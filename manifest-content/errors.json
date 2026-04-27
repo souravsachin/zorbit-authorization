@@ -1,0 +1,10 @@
+{
+  "AUTHOR_NOT_FOUND": {
+    "message": "Resource not found.",
+    "remedy": "Check the ID."
+  },
+  "AUTHOR_UNAUTHORIZED": {
+    "message": "Insufficient privileges.",
+    "remedy": "Ask a super admin."
+  }
+}

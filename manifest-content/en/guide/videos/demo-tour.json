@@ -1,0 +1,11 @@
+{
+  "entries": [
+    {
+      "title": "authorization demo",
+      "src": "/static/videos/authorization/demo.mp4",
+      "playerType": "tour",
+      "captions": "/static/videos/authorization/demo.vtt",
+      "duration": 60
+    }
+  ]
+}

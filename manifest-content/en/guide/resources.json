@@ -1,0 +1,9 @@
+{
+  "links": [
+    {
+      "label": "authorization OpenAPI",
+      "href": "/api/authorization/api/v1/G/openapi.json",
+      "kind": "api"
+    }
+  ]
+}

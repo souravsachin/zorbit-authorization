@@ -1,0 +1,13 @@
+{
+  "deck": [
+    {
+      "title": "authorization overview",
+      "body": "Overview of zorbit-cor-authorization.",
+      "narration": {
+        "audioSrc": "./audio/client-pitch/0.mp3",
+        "text": "Overview of zorbit-cor-authorization.",
+        "duration": 10
+      }
+    }
+  ]
+}
